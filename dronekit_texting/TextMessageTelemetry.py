@@ -87,7 +87,7 @@ class LocalGCScommunication(object):
         #
         ######################################################################################
         if message_importance < self._DEBUG_LEVEL:
-            print message
+            print(message)
 
 
 
@@ -102,7 +102,7 @@ class TextMessageTelemetry(object):
         self._ModemConnection = gsmmodem.GsmModem(port=LocalModemPath, baudrate=baud)
         try:
             self._PrepareModem()
-        except Exception, err:
+        except Exception as err:
             self.Logger("Modem Init failed"+str(err), message_importance=1)
             self._ModemConnection=None
 
@@ -118,7 +118,7 @@ class TextMessageTelemetry(object):
             self._ModemConnection.connect()
             self._ModemConnection.smsTextMode=True
             self._ModemLock.release()
-        except Exception, e:
+        except Exception as e:
             self.Logger("Prepare Modem failed"+str(e), message_importance=1)
             self._ModemConnection=None
 
@@ -131,7 +131,7 @@ class TextMessageTelemetry(object):
         #
         ######################################################################################
         if message_importance < self._DEBUG_LEVEL:
-            print message
+            print(message)
 
     def SendTextMessageTelemetry(self, ListOfMavlinkMessages, blocking=False):
         ######################################################################################
@@ -166,7 +166,7 @@ class TextMessageTelemetry(object):
             result = self._ModemConnection.sendSms(self._RemotePhoneNumber, OutgoingBuffer)
             self._ModemLock.release()
             return result
-        except Exception, e:
+        except Exception as e:
             self.Logger("Exception during sendSMS()"+str(e), message_importance=1)
             self._ModemLock.release()
             return None
@@ -199,7 +199,7 @@ class TextMessageTelemetry(object):
                 ListOfMavlinkMessages+=MavlinkMessages
             self._ModemLock.release()
             return ListOfMavlinkMessages
-        except Exception, e:
+        except Exception as e:
             self.Logger("Exception during GetTextMessage: "+str(e), message_importance=1)
             self._ModemLock.release()
 
@@ -255,7 +255,7 @@ class TextMessageTelemetry(object):
             DecompressedMavlinkBuffer = pylzma.decompress(DecodedMavlinkBuffer)
             ListOfMavlinkMessages = self._MavlinkHelperObject.parse_buffer(DecompressedMavlinkBuffer)
             return ListOfMavlinkMessages
-        except Exception, e:
+        except Exception as e:
             self.Logger("Exception in ConvertTextMessagetoMavlink: "+str(e), message_importance=1)
             return None
 

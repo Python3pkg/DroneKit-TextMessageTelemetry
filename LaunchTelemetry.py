@@ -67,21 +67,21 @@ def RunAsGroundStation():
             time.sleep(0.5)  #the GCS wants to be fed a vehicle heartbeat something like every second or it complains
 
     try:
-        print "Verifying initialization values..."
-        print "  -GROUNDSTATION PHONE NUMBER =",GROUNDSTATION_PHONE_NUMBER
-        print "  -VEHICLE PHONE NUMBER =",VEHICLE_PHONE_NUMBER
-        print "  -GROUNDSTATION MODEM PATH =", GROUNDSTATION_MODEM_PATH
-        print "  -GROUNDSTATION MODEM BAUD =", GROUNDSTATION_MODEM_BAUD
-        print "  -GCS SOFTWARE (E.G. MISSION PLANNER) LISTENING ON PORT", GCS_PORT
+        print("Verifying initialization values...")
+        print("  -GROUNDSTATION PHONE NUMBER =",GROUNDSTATION_PHONE_NUMBER)
+        print("  -VEHICLE PHONE NUMBER =",VEHICLE_PHONE_NUMBER)
+        print("  -GROUNDSTATION MODEM PATH =", GROUNDSTATION_MODEM_PATH)
+        print("  -GROUNDSTATION MODEM BAUD =", GROUNDSTATION_MODEM_BAUD)
+        print("  -GCS SOFTWARE (E.G. MISSION PLANNER) LISTENING ON PORT", GCS_PORT)
         sys.stdout.write("Are these values correct? (y/n) ")
-        response = raw_input().lower()
+        response = input().lower()
         if response == 'n':
-            print "Please input the correct values in LaunchTelemetry.py"
+            print("Please input the correct values in LaunchTelemetry.py")
             return
         elif response == 'y':
-            print "launching telemetry..."
+            print("launching telemetry...")
         else:
-            print "invalid keystroke"
+            print("invalid keystroke")
             return
 
         LastIncomingHeartbeat = None  #Cached copy of last received heartbeat from vehicle
@@ -95,11 +95,11 @@ def RunAsGroundStation():
         GCSListenerProcess.start()
         HeartbeatFakerProcess = multiprocessing.Process(target=HeartbeatRepeater)
         HeartbeatFakerProcess.start()
-    except Exception, error:
-        print "Exception during Groundstation comms initialization: ", str(error)
+    except Exception as error:
+        print("Exception during Groundstation comms initialization: ", str(error))
         quit()
 
-    print "Launching Telemetry Loop"
+    print("Launching Telemetry Loop")
     while 1:
         try:
             ListOfIncomingMavlinkMessages = TextMessagingConnection.GetTextMessageTelemetry(blocking=False)
@@ -108,8 +108,8 @@ def RunAsGroundStation():
                 if message.get_type()=="HEARTBEAT":
                     LastIncomingHeartbeat = message
             time.sleep(0.5)  #sleep to avoid hammering the GSM network
-        except Exception, error:
-            print "Exception Receiving Telemetry: ", str(error)
+        except Exception as error:
+            print("Exception Receiving Telemetry: ", str(error))
             #pass
 
 
@@ -139,22 +139,22 @@ def RunAsVehicle():
                 return
             if MavlinkMessage.get_type()=="BAD_DATA":
                 return
-            print "Received:", MavlinkMessage.get_type(), "| Current MessageQueue length:", len(MessageQueue)
+            print("Received:", MavlinkMessage.get_type(), "| Current MessageQueue length:", len(MessageQueue))
 
             if "ACK" in MavlinkMessage.get_type():
                 #critical message, block until added to outgoing queue
-                print "Critical outgoing message, blocking.."
+                print("Critical outgoing message, blocking..")
                 MessageQueueLock.acquire(True)
             elif MessageQueueLock.acquire(False)==False:
-                print "MessageQueue was LOCKED, returning.."
+                print("MessageQueue was LOCKED, returning..")
                 return #another callback is processing a msg from autopilot.  Drop this message
             else:
-                print "MessageQueue was UNLOCKED. processing msg.."
+                print("MessageQueue was UNLOCKED. processing msg..")
 
             MessageQueue.append(MavlinkMessage)
             #print "MessageQueue len AFTER:", len(MessageQueue)
             if len(TextMessagingConnection.ConvertMavlinkToTextMessage(MessageQueue))>160:
-                print "MessageQueue Over 160, sending!"
+                print("MessageQueue Over 160, sending!")
                 MessageQueue.pop()
                 #TODO:  This should probably be a thread
                 block=False
@@ -167,41 +167,41 @@ def RunAsVehicle():
                 MessageQueue=[]
                 MessageQueue.append(MavlinkMessage)
             MessageQueueLock.release()
-        except Exception, e:
-            print "Exception in Pixhawk callback", str(e)
+        except Exception as e:
+            print("Exception in Pixhawk callback", str(e))
             if MessageQueueLock.locked():
                 MessageQueueLock.release()
 
 
     try:
-        print "Verifying initialization values..."
-        print "  -GROUNDSTATION PHONE NUMBER =",GROUNDSTATION_PHONE_NUMBER
-        print "  -VEHICLE PHONE NUMBER =",VEHICLE_PHONE_NUMBER
-        print "  -VEHICLE MODEM PATH =", VEHICLE_MODEM_PATH
-        print "  -VEHICLE MODEM BAUD =", VEHICLE_MODEM_BAUD
-        print "  -AUTOPILOT_PATH =", AUTOPILOT_PATH
-        print "  -SECONDS BETWEEN MAILBOX CHECKS =", SECONDS_BETWEEN_MAILBOX_CHECKS
+        print("Verifying initialization values...")
+        print("  -GROUNDSTATION PHONE NUMBER =",GROUNDSTATION_PHONE_NUMBER)
+        print("  -VEHICLE PHONE NUMBER =",VEHICLE_PHONE_NUMBER)
+        print("  -VEHICLE MODEM PATH =", VEHICLE_MODEM_PATH)
+        print("  -VEHICLE MODEM BAUD =", VEHICLE_MODEM_BAUD)
+        print("  -AUTOPILOT_PATH =", AUTOPILOT_PATH)
+        print("  -SECONDS BETWEEN MAILBOX CHECKS =", SECONDS_BETWEEN_MAILBOX_CHECKS)
 
         sys.stdout.write("Are these values correct? (y/n) ")
-        response = raw_input().lower()
+        response = input().lower()
         if response == 'n':
-            print "Please input the correct values in LaunchTelemetry.py"
+            print("Please input the correct values in LaunchTelemetry.py")
             return
         elif response == 'y':
-            print "launching telemetry..."
+            print("launching telemetry...")
         else:
-            print "invalid keystroke"
+            print("invalid keystroke")
             return
 
 
         #Start DroneKit ver.2
         vehicle = connect(AUTOPILOT_PATH, wait_ready=True)
 
-        print "DroneKit init:  ", vehicle
+        print("DroneKit init:  ", vehicle)
 
         TextMessagingConnection = TextMessageTelemetry(GROUNDSTATION_PHONE_NUMBER, VEHICLE_MODEM_PATH, GROUNDSTATION_MODEM_BAUD, DEBUG_LEVEL=4)
         TextMessagingConnection.PurgeIncomingTextMessages()
-        print "Text Messaging init: ", TextMessagingConnection
+        print("Text Messaging init: ", TextMessagingConnection)
 
         time.sleep(3)
         vehicle.set_mavlink_callback(AutopilotIncomingMessageHandler)
@@ -210,8 +210,8 @@ def RunAsVehicle():
         GroundCommandListenerProcess.start()
 
 
-    except Exception, error:
-        print "Exception during Vehicle comms initialization: ", str(error)
+    except Exception as error:
+        print("Exception during Vehicle comms initialization: ", str(error))
         quit()
 
     while 1:
@@ -231,11 +231,11 @@ else:
 
 
 if AM_I_GROUNDSTATION_OR_VEHICLE == "GROUNDSTATION":
-    print "\n\nLaunching Ground Station Comms..."
+    print("\n\nLaunching Ground Station Comms...")
     RunAsGroundStation()
 
 if AM_I_GROUNDSTATION_OR_VEHICLE == "VEHICLE":
-    print "\n\nLaunching Vehicle Comms..."
+    print("\n\nLaunching Vehicle Comms...")
     RunAsVehicle()
 
 
